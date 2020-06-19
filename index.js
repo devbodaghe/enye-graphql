@@ -1,73 +1,47 @@
-const { GraphQLServer } = require("graphql-yoga");
-const fetch = require("node-fetch");
+const { ApolloServer, gql } = require('apollo-server');
+const fetch = require('node-fetch')
 
-const typeDefs = `
+const columns = ['latitude','longitude','radius','searchTerm','timeStamp']
+
+const typeDefs = gql`
+
+  type Result {
+    latitude: Float,
+    longitude: Float,
+    radius: Int,
+    searchTerm: String,
+    timeStamp: String,
+  }
+
+
   type Query {
-    hello(name: String): String!
-    getPerson(id: Int!): Person
-  }
-
-  type Planet {
-    name: String
-    rotation_period: String
-    orbital_period: String
-    films: [Film]
-  }
-
-  type Film {
-    title: String
-    episode_id: Int
-    opening_crawl: String
-    director: String
-    producer: String
-    release_date: String
-  }
-
-  type Person {
-    name: String
-    height: String
-    mass: String
-    hair_color: String
-    skin_color: String
-    eye_color: String
-    birth_year: String
-    gender: String
-    films: [Film]
-    homeworld: Planet
+    results (id : ID!): [Result]
   }
 `;
 
-const resolveFilms = parent => {
-  const promises = parent.films.map(async url => {
-    const response = await fetch(url);
-    return response.json();
-  });
-
-  return Promise.all(promises);
-};
-
 const resolvers = {
-  Planet: {
-    films: resolveFilms
-  },
-  Person: {
-    homeworld: async parent => {
-      const response = await fetch(parent.homeworld);
-      return response.json();
-    },
-    films: resolveFilms
-  },
   Query: {
-    hello: (_, { name }) => `Hello ${name || "World"}`,
-    getPerson: async (_, { id }) => {
-      const response = await fetch(`https://swapi.co/api/people/${id}/`);
-      return response.json();
-    }
-  }
+    results: async (_,args) => {
+
+      const response = await fetch(`https://enye-bfbc2.firebaseio.com/search.json`);
+      const data =  await response.json();
+      const result = []
+      for (let key in data) {
+        if(data[key].userID == args.id){
+          const obj = {}
+          columns.map(column => {
+            obj[`${column}`] = data[key][`${column}`]
+          })
+          result.push(obj)
+        }
+      }
+      return result
+    },
+  },
 };
 
-const server = new GraphQLServer({ typeDefs, resolvers });
-server.start(() => console.log("Server is running on localhost:4000"));
-server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
+const server = new ApolloServer({ typeDefs, resolvers });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀   Server ready at ${url}`);
 });

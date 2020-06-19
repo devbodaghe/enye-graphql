@@ -1,19 +1,11 @@
 {
-  "name": "graphql-api-req",
+  "name": "grapql",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
-  "scripts": {
-    "start": "nodemon index.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
-    "graphql-yoga": "^1.6.1",
-    "node-fetch": "^2.1.2"
-  },
-  "devDependencies": {
-    "nodemon": "^1.17.2"
+    "apollo-server": "^2.15.0",
+    "graphql": "^15.1.0",
+    "node-fetch": "^2.6.0"
   }
 }
